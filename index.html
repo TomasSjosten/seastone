@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Romantiskt Paket – Presentkort | Hotell Gyllene Uttern</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#0f1620;
+      --text:#eef2f6;
+      --muted:#b8c1cc;
+      --accent:#ffcc66;
+      --accent2:#7dd3fc;
+      --line:rgba(255,255,255,.10);
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius:18px;
+      --max: 980px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% -10%, rgba(125,211,252,.18), transparent 60%),
+        radial-gradient(900px 600px at 95% 10%, rgba(255,204,102,.16), transparent 55%),
+        var(--bg);
+      line-height:1.55;
+    }
+    .wrap{max-width:var(--max); margin:0 auto; padding:22px}
+    .hero{
+      border-radius:calc(var(--radius) + 8px);
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      border:1px solid var(--line);
+      position:relative;
+      min-height:440px;
+      background:
+        linear-gradient(120deg, rgba(11,15,20,.80) 0%, rgba(11,15,20,.30) 55%, rgba(11,15,20,.78) 100%),
+        url("https://www.schwedentipps.se/wp-content/uploads/2015/12/gyllene_uttern_04.jpg") center/cover no-repeat;
+    }
+    .badge{
+      display:inline-flex; gap:10px; align-items:center;
+      padding:10px 14px;
+      border:1px solid var(--line);
+      background:rgba(15,22,32,.65);
+      border-radius:999px;
+      backdrop-filter: blur(10px);
+      color:var(--muted);
+      font-size:14px;
+    }
+    .heroContent{position:absolute; inset:0; display:flex; align-items:flex-end; padding:28px}
+    .heroInner{
+      width:100%;
+      display:grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap:18px;
+      align-items:end;
+    }
+    h1{
+      margin:10px 0 6px;
+      font-size: clamp(28px, 4.2vw, 44px);
+      line-height:1.1;
+      letter-spacing:-.02em;
+    }
+    .lead{margin:0; color:var(--muted); font-size: clamp(15px, 2.2vw, 18px)}
+    .ctaBox{
+      border:1px solid var(--line);
+      background:rgba(15,22,32,.78);
+      border-radius:var(--radius);
+      padding:16px;
+      backdrop-filter: blur(10px);
+    }
+    .ctaTitle{font-weight:800; margin:0 0 8px; font-size:16px}
+    .ctaMeta{margin:0; color:var(--muted); font-size:14px}
+    .ctaPill{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      font-size:13px;
+      color:rgba(238,242,246,.92);
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.06);
+      padding:8px 10px;
+      border-radius:999px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+      margin-top:18px;
+    }
+    .card{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(15,22,32,.92), rgba(15,22,32,.72));
+      border-radius:var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .cardPad{padding:18px}
+    .kicker{
+      color:var(--accent);
+      font-weight:700;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      font-size:12px;
+      margin:0 0 10px;
+    }
+    h2{margin:0 0 8px; font-size:20px}
+    p{margin:0 0 10px; color:var(--muted)}
+    .img{
+      width:100%;
+      height:220px;
+      object-fit:cover;
+      display:block;
+      border-bottom:1px solid var(--line);
+    }
+    ul{margin:12px 0 0; padding:0; list-style:none}
+    li{
+      padding:10px 0;
+      border-top:1px solid var(--line);
+      color:var(--text);
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+    li:first-child{border-top:none; padding-top:0}
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background:linear-gradient(180deg, var(--accent), #ffdca3);
+      margin-top:7px;
+      flex:0 0 auto;
+      box-shadow: 0 0 0 4px rgba(255,204,102,.12);
+    }
+
+    .routes{
+      margin-top:16px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .routeBox{
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+      background:rgba(255,255,255,.04);
+    }
+    .routeTitle{margin:0 0 6px; font-weight:800; color:var(--text)}
+    .routeNote{margin:0 0 10px; font-size:13px; color:rgba(184,193,204,.92)}
+    .btnRow{display:flex; gap:10px; flex-wrap:wrap}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(125,211,252,.10);
+      text-decoration:none;
+      color:var(--text);
+      font-weight:700;
+      font-size:13px;
+    }
+    .btn.secondary{background:rgba(255,204,102,.10)}
+    .smallprint{
+      margin-top:12px;
+      font-size:12px;
+      color:rgba(184,193,204,.75);
+    }
+
+    .footer{margin:22px 0 6px; color:var(--muted); font-size:13px; text-align:center; opacity:.9;}
+    .fine{margin-top:8px; color:rgba(184,193,204,.8); font-size:12px; text-align:center;}
+
+    @media (max-width: 860px){
+      .heroInner{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      .routes{grid-template-columns:1fr}
+      .hero{min-height:500px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- HERO -->
+    <section class="hero" aria-label="Presentkort: Romantiskt paket på Hotell Gyllene Uttern">
+      <div class="heroContent">
+        <div class="heroInner">
+          <div>
+            <span class="badge">🎁 Presentkort • 🏍️ Roadtrip • 🌊 Utsikt över Vättern</span>
+            <h1>Romantiskt Paket – Gyllene Uttern</h1>
+            <p class="lead">
+              Föreställ er känslan. Motorn som mullrar igång. Kurviga landsvägar genom svensk sommar.
+              Vinddraget. Friheten. Förväntan. Och slutligen: Gränna vid glittrande Vättern.
+            </p>
+          </div>
+
+          <aside class="ctaBox">
+            <p class="ctaTitle">Presentkort – ni väljer när ni vill åka</p>
+            <p class="ctaMeta">
+              Det här är inte bara ett presentkort – det är starten på en liten roadtrip.
+              Ni bestämmer själva datum (och tempo).
+            </p>
+            <div class="ctaPill" aria-label="Snabbfakta">
+              <span class="pill">Frukostbuffé</span>
+              <span class="pill">Cava + tryfflar</span>
+              <span class="pill">Trerättersmiddag</span>
+              <span class="pill">Check-in 15:00</span>
+              <span class="pill">Check-out 11:00</span>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTENT GRID -->
+    <section class="grid" aria-label="Upplevelsen">
+      <!-- Vägen -->
+      <article class="card">
+        <img class="img" alt="Motorcykel på sommarväg" src="https://source.unsplash.com/Y0gVWciFDcA/1600x900" />
+        <div class="cardPad">
+          <p class="kicker">🛣️ Vägen är halva upplevelsen</p>
+          <h2>En liten roadtrip, bara ni två</h2>
+          <p>
+            Ta motorcykeln längs de mest spännande vägarna. Stanna vid utsiktsplatser.
+            Ta en kaffe längs vägen. Känn hur vardagen försvinner i backspegeln.
+          </p>
+          <p>
+            När ni rullar in i Gränna väntar något alldeles extra.
+          </p>
+        </div>
+      </article>
+
+      <!-- Ankomst -->
+      <article class="card">
+        <img class="img" alt="Hotell Gyllene Uttern med utsikt" src="https://www.schwedentipps.se/wp-content/uploads/2015/12/gyllene_uttern_05.jpg" />
+        <div class="cardPad">
+          <p class="kicker">🥂 En romantisk ankomst</p>
+          <h2>Tempot sänks direkt</h2>
+          <p>
+            På rummet står en flaska mousserande Cava och ljuvliga tryfflar och väntar.
+            Hjälmarna läggs åt sidan. Skinnjackorna hängs av. Nu är det bara ni.
+          </p>
+        </div>
+      </article>
+
+      <!-- Middag -->
+      <article class="card">
+        <img class="img" alt="Utsikt över Vättern från Gränna-trakten" src="https://www.schwedentipps.se/wp-content/uploads/2012/11/graenna_04.jpg" />
+        <div class="cardPad">
+          <p class="kicker">🍽️ Kvällen ni inte glömmer</p>
+          <h2>Smaker, utsikt och sommarkväll</h2>
+          <p>
+            När solen sjunker över Vättern väntar en romantisk trerättersmiddag.
+            Lokala råvaror, säsongens smaker och en utsikt som gör kvällen ännu mer magisk.
+          </p>
+          <p>
+            Efter en dag fylld av kurvor och äventyr smakar allt lite bättre.
+          </p>
+        </div>
+      </article>
+
+      <!-- Morgonen efter + ingår -->
+      <article class="card">
+        <img class="img" alt="Romantisk hotellkänsla" src="https://source.unsplash.com/1AhGNGKuhR0/1600x900" />
+        <div class="cardPad">
+          <p class="kicker">🌅 Morgonen efter</p>
+          <h2>Vila, frukost och nya minnen</h2>
+          <p>
+            Sov ut i bekväma rum eller svit. Vakna långsamt.
+            Låt doften av nybryggt kaffe leda er till en generös frukostbuffé.
+          </p>
+          <p>
+            Kanske tar ni en promenad genom staden innan ni startar motorerna igen – med nya minnen i bagaget.
+          </p>
+
+          <div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--line)">
+            <p class="kicker" style="margin-bottom:8px">💕 I Romantiska Paketet ingår</p>
+            <ul>
+              <li><span class="dot"></span><span>Frukostbuffé</span></li>
+              <li><span class="dot"></span><span>En flaska Cava</span></li>
+              <li><span class="dot"></span><span>Trerätters romantisk middag (valfri sittningstid)</span></li>
+              <li><span class="dot"></span><span>Tryfflar på rummet</span></li>
+              <li><span class="dot"></span><span>Check-in kl. 15:00</span></li>
+              <li><span class="dot"></span><span>Check-out kl. 11:00</span></li>
+            </ul>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- ROUTES (NO GUESSING: origin/destination handled by Google Maps form/device location) -->
+    <section class="card" style="margin-top:16px" aria-label="Alternativa resvägar (mysigare än E4)">
+      <div class="cardPad">
+        <p class="kicker">🧭 Alternativa resvägar</p>
+        <h2>2 förslag dit + 2 förslag hem (utan att gissa var ni startar/slutar)</h2>
+        <p>
+          Länkarna öppnar Google Maps med “undvik motorvägar” och med ett par utvalda stopp längs vägen.
+          För “dit” används din enhets startplats (om tillgängligt). För “hem” är startpunkten Gränna – du fyller själv i slutdestination.
+        </p>
+
+        <div class="routes">
+          <div class="routeBox">
+            <p class="routeTitle">Väg dit – alternativ 1</p>
+            <p class="routeNote">Via Eksjö + Tranås (undvik motorvägar).</p>
+            <div class="btnRow">
+              <a class="btn" target="_blank" rel="noopener"
+                 href="https://www.google.com/maps/dir/?api=1&destination=58.02250%2C14.46556&travelmode=driving&avoid=highways&waypoints=57.66694%2C14.97028%7C58.033%2C14.967">
+                Öppna i Google Maps →
+              </a>
+            </div>
+          </div>
+
+          <div class="routeBox">
+            <p class="routeTitle">Väg dit – alternativ 2</p>
+            <p class="routeNote">Via Vadstena + Hjo (undvik motorvägar).</p>
+            <div class="btnRow">
+              <a class="btn" target="_blank" rel="noopener"
+                 href="https://www.google.com/maps/dir/?api=1&destination=58.02250%2C14.46556&travelmode=driving&avoid=highways&waypoints=58.450%2C14.900%7C58.300%2C14.283">
+                Öppna i Google Maps →
+              </a>
+            </div>
+          </div>
+
+          <div class="routeBox">
+            <p class="routeTitle">Väg hem – alternativ 1</p>
+            <p class="routeNote">Start: Gränna. Via Vadstena (undvik motorvägar). Du väljer “Hem” i Maps.</p>
+            <div class="btnRow">
+              <a class="btn secondary" target="_blank" rel="noopener"
+                 href="https://www.google.com/maps/dir/?api=1&origin=58.02250%2C14.46556&travelmode=driving&avoid=highways&waypoints=58.450%2C14.900">
+                Öppna hemväg i Google Maps →
+              </a>
+            </div>
+          </div>
+
+          <div class="routeBox">
+            <p class="routeTitle">Väg hem – alternativ 2</p>
+            <p class="routeNote">Start: Gränna. Via Eksjö (undvik motorvägar). Du väljer “Hem” i Maps.</p>
+            <div class="btnRow">
+              <a class="btn secondary" target="_blank" rel="noopener"
+                 href="https://www.google.com/maps/dir/?api=1&origin=58.02250%2C14.46556&travelmode=driving&avoid=highways&waypoints=57.66694%2C14.97028">
+                Öppna hemväg i Google Maps →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <p class="smallprint">
+          Obs: Google Maps-länkarna använder “Maps URLs” (api=1) med waypoints och parametern <code>avoid=highways</code>.
+          Startpunkten för “dit” kan bli din enhets plats om den finns tillgänglig, annars får du fylla i den manuellt.
+        </p>
+      </div>
+    </section>
+
+    <p class="footer">Gyllene Uttern • Gränna, Sverige</p>
+    <p class="fine">Tips: Vill du att “hemvägarna” ska ha färdig slutdestination också, ange bara var “hem” är (stad/ort) så kan jag sätta det exakt i länkarna.</p>
+  </div>
+</body>
+</html>
