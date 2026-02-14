@@ -357,4 +357,127 @@
     <p class="footer">Gyllene Uttern • Gränna, Sverige</p>
   </div>
 </body>
+  <script>
+(() => {
+  // === KONFIG ===
+  const seconds = 5;                 // <-- X sekunder här
+  const maxParticles = 220;           // öka/minska mängden
+  const spawnPerFrame = 3;            // hur många som skapas per frame
+  const gravity = 0.12;
+  const drag = 0.995;
+
+  // === SETUP CANVAS ===
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  Object.assign(canvas.style, {
+    position: "fixed",
+    inset: "0",
+    width: "100%",
+    height: "100%",
+    pointerEvents: "none",
+    zIndex: "999999"
+  });
+  document.body.appendChild(canvas);
+
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  function resize() {
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  // === PARTICLES ===
+  const colors = ["#ff4d4d", "#ffd24d", "#4dff88", "#4dd2ff", "#b84dff", "#ffffff"];
+  const particles = [];
+
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+
+  function spawnBurst(n = 40) {
+    const w = canvas.width, h = canvas.height;
+    const originX = rand(w * 0.2, w * 0.8);
+    const originY = rand(h * 0.1, h * 0.35);
+
+    for (let i = 0; i < n; i++) {
+      const angle = rand(-Math.PI, Math.PI);
+      const speed = rand(3, 10) * dpr;
+      const size = rand(6, 14) * dpr;
+      particles.push({
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - rand(2, 6) * dpr,
+        w: size,
+        h: size * rand(0.5, 0.9),
+        rot: rand(0, Math.PI * 2),
+        vr: rand(-0.2, 0.2),
+        color: colors[(Math.random() * colors.length) | 0],
+        life: rand(50, 140),
+        ttl: 0
+      });
+    }
+  }
+
+  // initial puff
+  spawnBurst(80);
+
+  // === LOOP ===
+  let running = true;
+  const start = performance.now();
+  const endAt = start + seconds * 1000;
+
+  function step(now) {
+    // spawn while within duration
+    if (now < endAt) {
+      // small continuous spawn
+      for (let i = 0; i < spawnPerFrame; i++) {
+        if (particles.length < maxParticles) spawnBurst(6);
+      }
+    } else {
+      // stop spawning, let remaining fall out
+      running = particles.length > 0;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.ttl++;
+
+      // physics
+      p.vy += gravity * dpr;
+      p.vx *= drag;
+      p.vy *= drag;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+
+      // draw
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      const alpha = Math.max(0, 1 - p.ttl / p.life);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+
+      // remove if dead or out of bounds
+      if (p.ttl > p.life || p.y > canvas.height + 50 * dpr) {
+        particles.splice(i, 1);
+      }
+    }
+
+    if (running) {
+      requestAnimationFrame(step);
+    } else {
+      // cleanup
+      window.removeEventListener("resize", resize);
+      canvas.remove();
+    }
+  }
+
+  requestAnimationFrame(step);
+})();
+</script>
 </html>
