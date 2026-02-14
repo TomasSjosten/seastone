@@ -360,13 +360,116 @@
   <script>
 (() => {
   // === KONFIG ===
-  const seconds = 5;                 // <-- X sekunder här
-  const maxParticles = 220;           // öka/minska mängden
-  const spawnPerFrame = 3;            // hur många som skapas per frame
+  const seconds = 6;              // <-- X sekunder
+  const text = "50 år";           // <-- din text
+  const maxParticles = 240;
+  const spawnPerFrame = 3;
   const gravity = 0.12;
   const drag = 0.995;
 
-  // === SETUP CANVAS ===
+  // === OVERLAY (TEXT) ===
+  const overlay = document.createElement("div");
+  overlay.setAttribute("aria-live", "polite");
+  overlay.textContent = text;
+
+  Object.assign(overlay.style, {
+    position: "fixed",
+    inset: "0",
+    display: "grid",
+    placeItems: "center",
+    pointerEvents: "none",
+    zIndex: "1000000",
+    padding: "6vmin",
+    // “glow” + lätt glas-känsla
+    background: "radial-gradient(circle at center, rgba(0,0,0,0.18), rgba(0,0,0,0) 55%)",
+    textAlign: "center",
+    userSelect: "none",
+    WebkitUserSelect: "none"
+  });
+
+  // Text i egen wrapper för effekter
+  const title = document.createElement("div");
+  title.textContent = text;
+  Object.assign(title.style, {
+    fontWeight: "900",
+    letterSpacing: "0.02em",
+    lineHeight: "0.9",
+    // Mobilvänlig responsiv storlek
+    fontSize: "clamp(48px, 12vw, 140px)",
+    color: "white",
+    textShadow:
+      "0 2px 10px rgba(0,0,0,0.35), " +
+      "0 0 24px rgba(255,255,255,0.25), " +
+      "0 0 48px rgba(255,255,255,0.12)",
+    transform: "translateZ(0)",
+    filter: "drop-shadow(0 16px 40px rgba(0,0,0,0.25))"
+  });
+
+  // Subtle “shine”-lager ovanpå texten
+  const shine = document.createElement("div");
+  shine.textContent = text;
+  Object.assign(shine.style, {
+    position: "absolute",
+    inset: "0",
+    display: "grid",
+    placeItems: "center",
+    fontWeight: "900",
+    letterSpacing: "0.02em",
+    lineHeight: "0.9",
+    fontSize: "clamp(48px, 12vw, 140px)",
+    background: "linear-gradient(120deg, rgba(255,255,255,0) 20%, rgba(255,255,255,0.65) 50%, rgba(255,255,255,0) 80%)",
+    WebkitBackgroundClip: "text",
+    backgroundClip: "text",
+    color: "transparent",
+    opacity: "0.9",
+    transform: "translateX(-120%)",
+    pointerEvents: "none"
+  });
+
+  const textWrap = document.createElement("div");
+  Object.assign(textWrap.style, {
+    position: "relative",
+    display: "grid",
+    placeItems: "center",
+    padding: "2vmin 4vmin",
+    borderRadius: "24px",
+    // liten glasruta bakom texten för läsbarhet (snygg på mobil)
+    background: "rgba(255,255,255,0.08)",
+    backdropFilter: "blur(10px)",
+    WebkitBackdropFilter: "blur(10px)",
+    border: "1px solid rgba(255,255,255,0.18)",
+    boxShadow: "0 18px 60px rgba(0,0,0,0.30)"
+  });
+
+  textWrap.appendChild(title);
+  textWrap.appendChild(shine);
+  overlay.appendChild(textWrap);
+  document.body.appendChild(overlay);
+
+  // animate “pop in”
+  textWrap.animate(
+    [
+      { transform: "scale(0.82)", opacity: 0 },
+      { transform: "scale(1.04)", opacity: 1, offset: 0.6 },
+      { transform: "scale(1.0)", opacity: 1 }
+    ],
+    { duration: 700, easing: "cubic-bezier(.2,1,.2,1)", fill: "forwards" }
+  );
+
+  // shine sweep loop
+  let shineRunning = true;
+  (function shineLoop() {
+    if (!shineRunning) return;
+    shine.animate(
+      [
+        { transform: "translateX(-140%)" },
+        { transform: "translateX(140%)" }
+      ],
+      { duration: 1400, easing: "cubic-bezier(.2,.8,.2,1)" }
+    ).onfinish = () => setTimeout(shineLoop, 450);
+  })();
+
+  // === CONFETTI CANVAS ===
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   Object.assign(canvas.style, {
@@ -385,9 +488,11 @@
     canvas.height = Math.floor(window.innerHeight * dpr);
   }
   resize();
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", resize, { passive: true });
 
-  // === PARTICLES ===
+  // Reduce motion support
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const colors = ["#ff4d4d", "#ffd24d", "#4dff88", "#4dd2ff", "#b84dff", "#ffffff"];
   const particles = [];
 
@@ -395,13 +500,16 @@
 
   function spawnBurst(n = 40) {
     const w = canvas.width, h = canvas.height;
-    const originX = rand(w * 0.2, w * 0.8);
-    const originY = rand(h * 0.1, h * 0.35);
+
+    // spawn from top-ish center-ish for a “celebration” feel
+    const originX = rand(w * 0.18, w * 0.82);
+    const originY = rand(h * 0.08, h * 0.30);
 
     for (let i = 0; i < n; i++) {
       const angle = rand(-Math.PI, Math.PI);
-      const speed = rand(3, 10) * dpr;
+      const speed = rand(3, 10) * dpr * (reduceMotion ? 0.65 : 1);
       const size = rand(6, 14) * dpr;
+
       particles.push({
         x: originX,
         y: originY,
@@ -410,16 +518,15 @@
         w: size,
         h: size * rand(0.5, 0.9),
         rot: rand(0, Math.PI * 2),
-        vr: rand(-0.2, 0.2),
+        vr: rand(-0.22, 0.22) * (reduceMotion ? 0.6 : 1),
         color: colors[(Math.random() * colors.length) | 0],
-        life: rand(50, 140),
+        life: rand(55, 155),
         ttl: 0
       });
     }
   }
 
-  // initial puff
-  spawnBurst(80);
+  spawnBurst(90);
 
   // === LOOP ===
   let running = true;
@@ -427,14 +534,14 @@
   const endAt = start + seconds * 1000;
 
   function step(now) {
-    // spawn while within duration
-    if (now < endAt) {
-      // small continuous spawn
+    if (now < endAt && !reduceMotion) {
       for (let i = 0; i < spawnPerFrame; i++) {
         if (particles.length < maxParticles) spawnBurst(6);
       }
+    } else if (now < endAt && reduceMotion) {
+      // vid reduce motion: bara ett par extra puffar
+      if (Math.random() < 0.08 && particles.length < maxParticles) spawnBurst(10);
     } else {
-      // stop spawning, let remaining fall out
       running = particles.length > 0;
     }
 
@@ -444,15 +551,13 @@
       const p = particles[i];
       p.ttl++;
 
-      // physics
-      p.vy += gravity * dpr;
+      p.vy += gravity * dpr * (reduceMotion ? 0.7 : 1);
       p.vx *= drag;
       p.vy *= drag;
       p.x += p.vx;
       p.y += p.vy;
       p.rot += p.vr;
 
-      // draw
       ctx.save();
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
@@ -462,8 +567,7 @@
       ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
       ctx.restore();
 
-      // remove if dead or out of bounds
-      if (p.ttl > p.life || p.y > canvas.height + 50 * dpr) {
+      if (p.ttl > p.life || p.y > canvas.height + 80 * dpr) {
         particles.splice(i, 1);
       }
     }
@@ -471,10 +575,21 @@
     if (running) {
       requestAnimationFrame(step);
     } else {
-      // cleanup
-      window.removeEventListener("resize", resize);
-      canvas.remove();
+      cleanup();
     }
+  }
+
+  function cleanup() {
+    shineRunning = false;
+
+    // fade out overlay snyggt
+    overlay.animate(
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: 380, easing: "ease-out", fill: "forwards" }
+    ).onfinish = () => overlay.remove();
+
+    window.removeEventListener("resize", resize);
+    canvas.remove();
   }
 
   requestAnimationFrame(step);
