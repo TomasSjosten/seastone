@@ -372,230 +372,115 @@
   const reduceMotion =
     window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // ====== PRESENT-OVERLAY (SVG-baserat paket, inga deformationer) ======
-  const gift = document.createElement("div");
-  gift.setAttribute("role", "dialog");
-  gift.setAttribute("aria-modal", "true");
-  gift.setAttribute("aria-label", "Present");
+  // ====== STYLES (inspirerat av gisten: joggle + claimed transform) ======
+  const style = document.createElement("style");
+  style.textContent = `
+    .gift-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000002;
+      display: grid;
+      place-items: center;
+      padding: 6vmin;
+      background:
+        radial-gradient(circle at 25% 15%, rgba(255,255,255,0.16), rgba(255,255,255,0) 45%),
+        radial-gradient(circle at 75% 20%, rgba(255,255,255,0.12), rgba(255,255,255,0) 48%),
+        linear-gradient(135deg, rgba(12,12,18,0.92), rgba(8,8,14,0.95));
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
 
-  Object.assign(gift.style, {
-    position: "fixed",
-    inset: "0",
-    zIndex: "1000002",
-    display: "grid",
-    placeItems: "center",
-    padding: "6vmin",
-    background:
-      "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.16), rgba(255,255,255,0) 45%)," +
-      "radial-gradient(circle at 75% 20%, rgba(255,255,255,0.12), rgba(255,255,255,0) 48%)," +
-      "linear-gradient(135deg, rgba(12,12,18,0.92), rgba(8,8,14,0.95))",
-    backdropFilter: "blur(6px)",
-    WebkitBackdropFilter: "blur(6px)"
-  });
+    .gift-ui {
+      width: min(92vw, 520px);
+      text-align: center;
+      color: rgba(255,255,255,0.92);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-  // Wrap med fast proportion via SVG viewBox
-  const wrap = document.createElement("div");
-  Object.assign(wrap.style, {
-    width: "min(82vw, 440px)",
-    transform: "translateZ(0)",
-    textAlign: "center"
-  });
+    .gift-title {
+      font-weight: 800;
+      font-size: 18px;
+      line-height: 1.2;
+      text-shadow: 0 14px 40px rgba(0,0,0,0.45);
+      margin-bottom: 14px;
+    }
 
-  // CTA
-  const cta = document.createElement("div");
-  cta.textContent = "Ett paket till dig 🎁";
-  Object.assign(cta.style, {
-    marginBottom: "14px",
-    color: "rgba(255,255,255,0.92)",
-    font: "700 16px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-    textShadow: "0 14px 40px rgba(0,0,0,0.45)"
-  });
+    .gift-emoji {
+      font-size: clamp(110px, 26vw, 220px);
+      line-height: 1;
+      display: inline-block;
+      transform: translateZ(0);
+      filter: drop-shadow(0 30px 90px rgba(0,0,0,0.55));
+    }
+
+    /* "joggle" keyframes i samma stil som gisten */
+    .joggle { animation: joggle 4.5s ease-in-out infinite; }
+    @keyframes joggle {
+      0%, 33%, 100% { transform: rotate(0deg); }
+      3.33% { transform: rotate(-10deg); }
+      6.67% { transform: rotate(12deg); }
+      10% { transform: rotate(-10deg); }
+      13.33% { transform: rotate(9deg); }
+      16.67% { transform: rotate(0deg); }
+    }
+
+    .gift-emoji--claimed {
+      transition: transform 500ms ease;
+      transform: scale(1.45) rotate(12deg);
+    }
+
+    .gift-btn {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 22px;
+      margin-top: 18px;
+      font: 900 18px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      letter-spacing: 0.01em;
+      color: rgba(10,10,18,0.92);
+      background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.72));
+      box-shadow: 0 18px 60px rgba(0,0,0,0.45);
+      cursor: pointer;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ====== PRESENT-OVERLAY ======
+  const overlay = document.createElement("div");
+  overlay.className = "gift-overlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", "Present");
+
+  const ui = document.createElement("div");
+  ui.className = "gift-ui";
+
+  const title = document.createElement("div");
+  title.className = "gift-title";
+  title.textContent = "Ett paket till dig 🎁";
+
+  const emoji = document.createElement("div");
+  emoji.className = "gift-emoji" + (reduceMotion ? "" : " joggle");
+  emoji.textContent = "🎁";
 
   const btn = document.createElement("button");
   btn.type = "button";
+  btn.className = "gift-btn";
   btn.textContent = buttonText;
-  Object.assign(btn.style, {
-    appearance: "none",
-    border: "0",
-    borderRadius: "999px",
-    padding: "14px 22px",
-    marginTop: "18px",
-    font: "900 18px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-    letterSpacing: "0.01em",
-    color: "rgba(10,10,18,0.92)",
-    background: "linear-gradient(135deg, rgba(255,255,255,0.96), rgba(255,255,255,0.72))",
-    boxShadow: "0 18px 60px rgba(0,0,0,0.45)",
-    cursor: "pointer"
-  });
 
-  if (!reduceMotion) {
-    btn.animate([{ transform: "scale(1)" }, { transform: "scale(1.04)" }, { transform: "scale(1)" }], {
-      duration: 1400,
-      iterations: Infinity,
-      easing: "ease-in-out"
-    });
-  }
-
-  // SVG present (proportionellt perfekt, med inbyggda gradients/shadows)
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 400 420");
-  svg.setAttribute("width", "100%");
-  svg.setAttribute("height", "auto");
-  svg.style.display = "block";
-  svg.style.filter = "drop-shadow(0 30px 90px rgba(0,0,0,0.55))";
-
-  svg.innerHTML = `
-    <defs>
-      <linearGradient id="boxGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
-        <stop offset="1" stop-color="#ffffff" stop-opacity="0.06"/>
-      </linearGradient>
-
-      <linearGradient id="lidGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#ff4d7d"/>
-        <stop offset="0.55" stop-color="#ffcc3d"/>
-        <stop offset="1" stop-color="#4dd2ff"/>
-      </linearGradient>
-
-      <linearGradient id="ribbonGradV" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#ffffff" stop-opacity="0.70"/>
-        <stop offset="1" stop-color="#ffffff" stop-opacity="0.18"/>
-      </linearGradient>
-
-      <linearGradient id="ribbonGradH" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#ffffff" stop-opacity="0.65"/>
-        <stop offset="1" stop-color="#ffffff" stop-opacity="0.16"/>
-      </linearGradient>
-
-      <linearGradient id="bowGrad" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#b84dff"/>
-        <stop offset="0.55" stop-color="#4dd2ff"/>
-        <stop offset="1" stop-color="#4dff88"/>
-      </linearGradient>
-
-      <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
-        <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#000" flood-opacity="0.35"/>
-      </filter>
-
-      <filter id="innerGlow" x="-40%" y="-40%" width="180%" height="180%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
-        <feColorMatrix in="blur" type="matrix" values="
-          1 0 0 0 0
-          0 1 0 0 0
-          0 0 1 0 0
-          0 0 0 0.22 0" result="glow"/>
-        <feMerge>
-          <feMergeNode in="glow"/>
-          <feMergeNode in="SourceGraphic"/>
-        </feMerge>
-      </filter>
-
-      <clipPath id="lidClip">
-        <rect x="52" y="72" width="296" height="142" rx="28" ry="28"/>
-      </clipPath>
-    </defs>
-
-    <!-- Ground shadow -->
-    <ellipse cx="200" cy="392" rx="150" ry="18" fill="#000" opacity="0.26"/>
-
-    <!-- Lid group (split in two halves for a clean “open” animation) -->
-    <g id="lidGroup" filter="url(#softShadow)">
-      <g id="lidLeft">
-        <rect x="52" y="72" width="148" height="142" rx="28" ry="28" fill="url(#lidGrad)"/>
-        <rect x="52" y="72" width="148" height="142" rx="28" ry="28" fill="#fff" opacity="0.10"/>
-        <!-- highlight -->
-        <path d="M70 92 C110 78, 150 78, 190 92 L190 110 C150 96, 110 96, 70 110 Z" fill="#fff" opacity="0.18"/>
-      </g>
-
-      <g id="lidRight">
-        <rect x="200" y="72" width="148" height="142" rx="28" ry="28" fill="url(#lidGrad)"/>
-        <rect x="200" y="72" width="148" height="142" rx="28" ry="28" fill="#fff" opacity="0.10"/>
-        <!-- highlight -->
-        <path d="M210 92 C250 78, 290 78, 330 92 L330 110 C290 96, 250 96, 210 110 Z" fill="#fff" opacity="0.18"/>
-      </g>
-
-      <!-- Lid ribbon -->
-      <g clip-path="url(#lidClip)" opacity="0.92">
-        <rect x="186" y="68" width="28" height="160" rx="14" fill="url(#ribbonGradV)" style="mix-blend-mode:screen"/>
-        <rect x="52" y="132" width="296" height="26" rx="13" fill="url(#ribbonGradH)" style="mix-blend-mode:screen"/>
-      </g>
-    </g>
-
-    <!-- Box -->
-    <g id="boxGroup" filter="url(#softShadow)">
-      <rect x="44" y="182" width="312" height="182" rx="30" ry="30" fill="url(#boxGrad)" stroke="#fff" stroke-opacity="0.14"/>
-      <!-- subtle sheen -->
-      <path d="M70 208 C120 196, 170 196, 220 208 C170 222, 120 222, 70 208 Z" fill="#fff" opacity="0.10"/>
-      <!-- ribbons -->
-      <rect x="186" y="182" width="28" height="182" rx="14" fill="url(#ribbonGradV)" style="mix-blend-mode:screen" opacity="0.92"/>
-      <rect x="44" y="252" width="312" height="26" rx="13" fill="url(#ribbonGradH)" style="mix-blend-mode:screen" opacity="0.86"/>
-    </g>
-
-    <!-- Bow -->
-    <g id="bowGroup" filter="url(#softShadow)">
-      <g transform="translate(200 86)">
-        <!-- left loop -->
-        <path d="M-18 20
-                 C-90 0, -140 40, -118 82
-                 C-98 122, -45 114, -12 88
-                 C-26 60, -28 42, -18 20 Z"
-              fill="url(#bowGrad)" stroke="#fff" stroke-opacity="0.12"/>
-
-        <!-- right loop -->
-        <path d="M18 20
-                 C90 0, 140 40, 118 82
-                 C98 122, 45 114, 12 88
-                 C26 60, 28 42, 18 20 Z"
-              fill="url(#bowGrad)" stroke="#fff" stroke-opacity="0.12"/>
-
-        <!-- knot -->
-        <ellipse cx="0" cy="64" rx="18" ry="16" fill="url(#ribbonGradV)" style="mix-blend-mode:screen" opacity="0.92"/>
-        <ellipse cx="0" cy="64" rx="22" ry="20" fill="#000" opacity="0.08"/>
-
-        <!-- tiny sparkle highlight -->
-        <path d="M-8 58 C-4 52, 6 52, 10 58 C4 56, -2 56, -8 58 Z" fill="#fff" opacity="0.22"/>
-      </g>
-    </g>
-
-    <!-- Overall glow -->
-    <g filter="url(#innerGlow)" opacity="0.9">
-      <rect x="44" y="72" width="312" height="292" rx="32" ry="32" fill="#fff" opacity="0.02"/>
-    </g>
-  `;
-
-  // små “liv” i paketet utan deformation
-  if (!reduceMotion) {
-    svg.animate([{ transform: "translateY(0px)" }, { transform: "translateY(-8px)" }, { transform: "translateY(0px)" }], {
-      duration: 2200,
-      iterations: Infinity,
-      easing: "ease-in-out"
-    });
-    const bowGroup = svg.querySelector("#bowGroup");
-    bowGroup && bowGroup.animate([{ transform: "rotate(-6deg)" }, { transform: "rotate(6deg)" }, { transform: "rotate(-6deg)" }], {
-      duration: 1400,
-      iterations: Infinity,
-      easing: "ease-in-out",
-      transformOrigin: "200px 90px"
-    });
-  }
-
-  wrap.appendChild(cta);
-  wrap.appendChild(svg);
-  wrap.appendChild(btn);
-  gift.appendChild(wrap);
-  document.body.appendChild(gift);
+  ui.appendChild(title);
+  ui.appendChild(emoji);
+  ui.appendChild(document.createElement("div")); // lite luft
+  ui.appendChild(btn);
+  overlay.appendChild(ui);
+  document.body.appendChild(overlay);
 
   btn.focus({ preventScroll: true });
 
   // ====== ÖPPNA ======
   let opened = false;
-  btn.addEventListener("click", openGift, { passive: true });
-  gift.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " " || e.code === "Space") {
-      e.preventDefault();
-      openGift();
-    }
-  });
 
   function openGift() {
     if (opened) return;
@@ -605,42 +490,45 @@
     btn.style.opacity = "0.85";
     btn.style.cursor = "default";
 
-    // Animera lock-halvor (SVG) snyggt bort – inga CSS-trick, ren transform
-    const lidLeft = svg.querySelector("#lidLeft");
-    const lidRight = svg.querySelector("#lidRight");
+    // stoppa joggle + gör "claimed" transform (som i gisten)
+    emoji.classList.remove("joggle");
+    void emoji.offsetWidth; // reflow för att säkert “nolla” animation state
+    emoji.classList.add("gift-emoji--claimed");
 
-    if (!reduceMotion) {
-      lidLeft && lidLeft.animate(
-        [{ transform: "translate(0px,0px) rotate(0deg)", opacity: 1 },
-         { transform: "translate(-220px,-60px) rotate(-14deg)", opacity: 0 }],
-        { duration: 520, easing: "cubic-bezier(.2,1,.2,1)", fill: "forwards" }
-      );
-
-      lidRight && lidRight.animate(
-        [{ transform: "translate(0px,0px) rotate(0deg)", opacity: 1 },
-         { transform: "translate(220px,-60px) rotate(14deg)", opacity: 0 }],
-        { duration: 520, easing: "cubic-bezier(.2,1,.2,1)", fill: "forwards" }
-      );
-
-      gift.animate([{ opacity: 1 }, { opacity: 0 }], {
-        duration: 520,
-        easing: "ease-out",
-        fill: "forwards"
-      });
-    } else {
-      gift.style.opacity = "0";
-    }
-
-    startCelebration();
-
-    setTimeout(() => gift.remove(), reduceMotion ? 0 : 560);
+    // Starta celebration strax efter, så transform hinner kännas
+    setTimeout(() => {
+      startCelebration();
+      // fade bort overlay
+      if (!reduceMotion) {
+        overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: 420,
+          easing: "ease-out",
+          fill: "forwards"
+        }).onfinish = cleanupGift;
+      } else {
+        cleanupGift();
+      }
+    }, 500);
   }
+
+  function cleanupGift() {
+    overlay.remove();
+    style.remove();
+  }
+
+  btn.addEventListener("click", openGift, { passive: true });
+  overlay.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " " || e.code === "Space") {
+      e.preventDefault();
+      openGift();
+    }
+  });
 
   // ====== CELEBRATION: TEXT + CONFETTI ======
   function startCelebration() {
     // --- Text overlay ---
-    const overlay = document.createElement("div");
-    Object.assign(overlay.style, {
+    const textOverlay = document.createElement("div");
+    Object.assign(textOverlay.style, {
       position: "fixed",
       inset: "0",
       display: "grid",
@@ -652,9 +540,9 @@
       WebkitUserSelect: "none"
     });
 
-    const title = document.createElement("div");
-    title.textContent = text;
-    Object.assign(title.style, {
+    const big = document.createElement("div");
+    big.textContent = text;
+    Object.assign(big.style, {
       fontWeight: "900",
       lineHeight: "0.92",
       letterSpacing: "0.01em",
@@ -674,11 +562,11 @@
       transform: "translateZ(0)"
     });
 
-    overlay.appendChild(title);
-    document.body.appendChild(overlay);
+    textOverlay.appendChild(big);
+    document.body.appendChild(textOverlay);
 
     if (!reduceMotion) {
-      title.animate(
+      big.animate(
         [
           { transform: "scale(0.78)", opacity: 0 },
           { transform: "scale(1.10)", opacity: 1, offset: 0.65 },
@@ -687,7 +575,7 @@
         { duration: 650, easing: "cubic-bezier(.2,1,.2,1)", fill: "forwards" }
       );
 
-      title.animate(
+      big.animate(
         [
           { transform: "translateY(0px) rotate(-1deg)" },
           { transform: "translateY(-10px) rotate(1deg)" },
@@ -696,7 +584,7 @@
         { duration: 2200, iterations: Infinity, easing: "ease-in-out" }
       );
     } else {
-      title.style.opacity = "1";
+      big.style.opacity = "1";
     }
 
     // --- Confetti canvas ---
@@ -796,11 +684,11 @@
     }
 
     function cleanup() {
-      overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
+      textOverlay.animate([{ opacity: 1 }, { opacity: 0 }], {
         duration: 320,
         easing: "ease-out",
         fill: "forwards"
-      }).onfinish = () => overlay.remove();
+      }).onfinish = () => textOverlay.remove();
 
       window.removeEventListener("resize", resize);
       canvas.remove();
