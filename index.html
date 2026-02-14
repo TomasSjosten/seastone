@@ -360,18 +360,19 @@
   <script>
 (() => {
   // === KONFIG ===
-  const seconds = 6;              // <-- X sekunder
-  const text = "50 år";           // <-- din text
+  const seconds = 6;        // <-- confetti + text visas i X sekunder
+  const text = "50år";      // <-- endast EN gång
+
   const maxParticles = 240;
   const spawnPerFrame = 3;
   const gravity = 0.12;
   const drag = 0.995;
 
-  // === OVERLAY (TEXT) ===
-  const overlay = document.createElement("div");
-  overlay.setAttribute("aria-live", "polite");
-  overlay.textContent = text;
+  // Reduce motion support
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // === TEXT OVERLAY ===
+  const overlay = document.createElement("div");
   Object.assign(overlay.style, {
     position: "fixed",
     inset: "0",
@@ -380,94 +381,66 @@
     pointerEvents: "none",
     zIndex: "1000000",
     padding: "6vmin",
-    // “glow” + lätt glas-känsla
-    background: "radial-gradient(circle at center, rgba(0,0,0,0.18), rgba(0,0,0,0) 55%)",
-    textAlign: "center",
     userSelect: "none",
     WebkitUserSelect: "none"
   });
 
-  // Text i egen wrapper för effekter
+  // Endast ett text-element
   const title = document.createElement("div");
   title.textContent = text;
+
   Object.assign(title.style, {
     fontWeight: "900",
-    letterSpacing: "0.02em",
-    lineHeight: "0.9",
-    // Mobilvänlig responsiv storlek
-    fontSize: "clamp(48px, 12vw, 140px)",
-    color: "white",
-    textShadow:
-      "0 2px 10px rgba(0,0,0,0.35), " +
-      "0 0 24px rgba(255,255,255,0.25), " +
-      "0 0 48px rgba(255,255,255,0.12)",
-    transform: "translateZ(0)",
-    filter: "drop-shadow(0 16px 40px rgba(0,0,0,0.25))"
-  });
+    lineHeight: "0.92",
+    letterSpacing: "0.01em",
+    textAlign: "center",
+    fontSize: "clamp(56px, 14vw, 160px)",
 
-  // Subtle “shine”-lager ovanpå texten
-  const shine = document.createElement("div");
-  shine.textContent = text;
-  Object.assign(shine.style, {
-    position: "absolute",
-    inset: "0",
-    display: "grid",
-    placeItems: "center",
-    fontWeight: "900",
-    letterSpacing: "0.02em",
-    lineHeight: "0.9",
-    fontSize: "clamp(48px, 12vw, 140px)",
-    background: "linear-gradient(120deg, rgba(255,255,255,0) 20%, rgba(255,255,255,0.65) 50%, rgba(255,255,255,0) 80%)",
+    // Ballong-känsla: färgglad “plastig” gradient
+    background:
+      "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(255,255,255,0) 28%)," +
+      "linear-gradient(135deg, #ff4d7d 0%, #ffcc3d 25%, #4dff88 50%, #4dd2ff 75%, #b84dff 100%)",
     WebkitBackgroundClip: "text",
     backgroundClip: "text",
     color: "transparent",
-    opacity: "0.9",
-    transform: "translateX(-120%)",
-    pointerEvents: "none"
+
+    // Skuggor för “puff”/ballong
+    textShadow:
+      "0 2px 0 rgba(255,255,255,0.18)," +
+      "0 10px 30px rgba(0,0,0,0.28)," +
+      "0 24px 60px rgba(0,0,0,0.18)",
+
+    // Liten “highlight” via filter
+    filter: "drop-shadow(0 18px 35px rgba(0,0,0,0.25))",
+    transform: "translateZ(0)"
   });
 
-  const textWrap = document.createElement("div");
-  Object.assign(textWrap.style, {
-    position: "relative",
-    display: "grid",
-    placeItems: "center",
-    padding: "2vmin 4vmin",
-    borderRadius: "24px",
-    // liten glasruta bakom texten för läsbarhet (snygg på mobil)
-    background: "rgba(255,255,255,0.08)",
-    backdropFilter: "blur(10px)",
-    WebkitBackdropFilter: "blur(10px)",
-    border: "1px solid rgba(255,255,255,0.18)",
-    boxShadow: "0 18px 60px rgba(0,0,0,0.30)"
-  });
-
-  textWrap.appendChild(title);
-  textWrap.appendChild(shine);
-  overlay.appendChild(textWrap);
+  overlay.appendChild(title);
   document.body.appendChild(overlay);
 
-  // animate “pop in”
-  textWrap.animate(
-    [
-      { transform: "scale(0.82)", opacity: 0 },
-      { transform: "scale(1.04)", opacity: 1, offset: 0.6 },
-      { transform: "scale(1.0)", opacity: 1 }
-    ],
-    { duration: 700, easing: "cubic-bezier(.2,1,.2,1)", fill: "forwards" }
-  );
-
-  // shine sweep loop
-  let shineRunning = true;
-  (function shineLoop() {
-    if (!shineRunning) return;
-    shine.animate(
+  // Pop-in + mjuk float (utan slide)
+  if (!reduceMotion) {
+    title.animate(
       [
-        { transform: "translateX(-140%)" },
-        { transform: "translateX(140%)" }
+        { transform: "scale(0.78)", opacity: 0 },
+        { transform: "scale(1.08)", opacity: 1, offset: 0.65 },
+        { transform: "scale(1.00)", opacity: 1 }
       ],
-      { duration: 1400, easing: "cubic-bezier(.2,.8,.2,1)" }
-    ).onfinish = () => setTimeout(shineLoop, 450);
-  })();
+      { duration: 650, easing: "cubic-bezier(.2,1,.2,1)", fill: "forwards" }
+    );
+
+    // kontinuerlig “ballong-float”
+    title.animate(
+      [
+        { transform: "translateY(0px) rotate(-1deg)" },
+        { transform: "translateY(-10px) rotate(1deg)" },
+        { transform: "translateY(0px) rotate(-1deg)" }
+      ],
+      { duration: 2200, iterations: Infinity, easing: "ease-in-out" }
+    );
+  } else {
+    title.style.opacity = "1";
+  }
 
   // === CONFETTI CANVAS ===
   const canvas = document.createElement("canvas");
@@ -490,20 +463,14 @@
   resize();
   window.addEventListener("resize", resize, { passive: true });
 
-  // Reduce motion support
-  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  const colors = ["#ff4d4d", "#ffd24d", "#4dff88", "#4dd2ff", "#b84dff", "#ffffff"];
+  const colors = ["#ff4d7d", "#ffcc3d", "#4dff88", "#4dd2ff", "#b84dff", "#ffffff"];
   const particles = [];
-
   function rand(min, max) { return Math.random() * (max - min) + min; }
 
   function spawnBurst(n = 40) {
     const w = canvas.width, h = canvas.height;
-
-    // spawn from top-ish center-ish for a “celebration” feel
     const originX = rand(w * 0.18, w * 0.82);
-    const originY = rand(h * 0.08, h * 0.30);
+    const originY = rand(h * 0.06, h * 0.28);
 
     for (let i = 0; i < n; i++) {
       const angle = rand(-Math.PI, Math.PI);
@@ -526,7 +493,7 @@
     }
   }
 
-  spawnBurst(90);
+  spawnBurst(110);
 
   // === LOOP ===
   let running = true;
@@ -534,13 +501,14 @@
   const endAt = start + seconds * 1000;
 
   function step(now) {
-    if (now < endAt && !reduceMotion) {
-      for (let i = 0; i < spawnPerFrame; i++) {
-        if (particles.length < maxParticles) spawnBurst(6);
+    if (now < endAt) {
+      if (!reduceMotion) {
+        for (let i = 0; i < spawnPerFrame; i++) {
+          if (particles.length < maxParticles) spawnBurst(6);
+        }
+      } else {
+        if (Math.random() < 0.07 && particles.length < maxParticles) spawnBurst(10);
       }
-    } else if (now < endAt && reduceMotion) {
-      // vid reduce motion: bara ett par extra puffar
-      if (Math.random() < 0.08 && particles.length < maxParticles) spawnBurst(10);
     } else {
       running = particles.length > 0;
     }
@@ -572,21 +540,16 @@
       }
     }
 
-    if (running) {
-      requestAnimationFrame(step);
-    } else {
-      cleanup();
-    }
+    if (running) requestAnimationFrame(step);
+    else cleanup();
   }
 
   function cleanup() {
-    shineRunning = false;
-
-    // fade out overlay snyggt
-    overlay.animate(
-      [{ opacity: 1 }, { opacity: 0 }],
-      { duration: 380, easing: "ease-out", fill: "forwards" }
-    ).onfinish = () => overlay.remove();
+    overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: 320,
+      easing: "ease-out",
+      fill: "forwards"
+    }).onfinish = () => overlay.remove();
 
     window.removeEventListener("resize", resize);
     canvas.remove();
