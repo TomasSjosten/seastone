@@ -359,203 +359,458 @@
 </body>
   <script>
 (() => {
-  // === KONFIG ===
-  const seconds = 6;        // <-- confetti + text visas i X sekunder
-  const text = "50år";      // <-- endast EN gång
+  // ====== KONFIG ======
+  const seconds = 6;            // hur länge confetti + "50år" visas
+  const text = "50år";
+  const buttonText = "Öppna";
 
-  const maxParticles = 240;
+  const maxParticles = 260;
   const spawnPerFrame = 3;
   const gravity = 0.12;
   const drag = 0.995;
 
-  // Reduce motion support
-  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduceMotion =
+    window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // === TEXT OVERLAY ===
-  const overlay = document.createElement("div");
-  Object.assign(overlay.style, {
+  // ====== LITE CSS (INLINE) ======
+  const style = document.createElement("style");
+  style.textContent = `
+    @keyframes giftFloat { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-8px) } }
+    @keyframes bowWiggle { 0%,100%{ transform: rotate(-6deg) } 50%{ transform: rotate(6deg) } }
+    @keyframes popIn { 0%{ transform: scale(.9); opacity:0 } 100%{ transform: scale(1); opacity:1 } }
+    @keyframes fadeOutZoom { to { opacity: 0; transform: scale(1.03) } }
+    @keyframes shredLeft { to { transform: translateX(-55vw) rotate(-10deg); opacity:0 } }
+    @keyframes shredRight{ to { transform: translateX(55vw) rotate(10deg); opacity:0 } }
+    @keyframes floatTitle { 0%,100%{ transform: translateY(0) rotate(-1deg) } 50%{ transform: translateY(-10px) rotate(1deg) } }
+  `;
+  document.head.appendChild(style);
+
+  // ====== PRESENT-OVERLAY ======
+  const gift = document.createElement("div");
+  gift.setAttribute("role", "dialog");
+  gift.setAttribute("aria-modal", "true");
+  gift.setAttribute("aria-label", "Present");
+
+  Object.assign(gift.style, {
     position: "fixed",
     inset: "0",
+    zIndex: "1000002",
     display: "grid",
     placeItems: "center",
-    pointerEvents: "none",
-    zIndex: "1000000",
     padding: "6vmin",
-    userSelect: "none",
-    WebkitUserSelect: "none"
+    background:
+      "radial-gradient(circle at 20% 10%, rgba(255,255,255,0.20), rgba(255,255,255,0) 40%)," +
+      "radial-gradient(circle at 80% 20%, rgba(255,255,255,0.16), rgba(255,255,255,0) 45%)," +
+      "linear-gradient(135deg, rgba(20,20,40,0.92), rgba(10,10,20,0.94))",
+    backdropFilter: "blur(6px)",
+    WebkitBackdropFilter: "blur(6px)"
   });
 
-  // Endast ett text-element
-  const title = document.createElement("div");
-  title.textContent = text;
-
-  Object.assign(title.style, {
-    fontWeight: "900",
-    lineHeight: "0.92",
-    letterSpacing: "0.01em",
-    textAlign: "center",
-    fontSize: "clamp(56px, 14vw, 160px)",
-
-    // Ballong-känsla: färgglad “plastig” gradient
-    background:
-      "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(255,255,255,0) 28%)," +
-      "linear-gradient(135deg, #ff4d7d 0%, #ffcc3d 25%, #4dff88 50%, #4dd2ff 75%, #b84dff 100%)",
-    WebkitBackgroundClip: "text",
-    backgroundClip: "text",
-    color: "transparent",
-
-    // Skuggor för “puff”/ballong
-    textShadow:
-      "0 2px 0 rgba(255,255,255,0.18)," +
-      "0 10px 30px rgba(0,0,0,0.28)," +
-      "0 24px 60px rgba(0,0,0,0.18)",
-
-    // Liten “highlight” via filter
-    filter: "drop-shadow(0 18px 35px rgba(0,0,0,0.25))",
+  const boxWrap = document.createElement("div");
+  Object.assign(boxWrap.style, {
+    width: "min(78vw, 420px)",
+    aspectRatio: "1 / 1",
+    position: "relative",
+    display: "grid",
+    placeItems: "center",
+    animation: reduceMotion ? "none" : "giftFloat 2.2s ease-in-out infinite",
     transform: "translateZ(0)"
   });
 
-  overlay.appendChild(title);
-  document.body.appendChild(overlay);
+  // två “lock-halvor” som flyger bort vid öppning
+  const lidLeft = document.createElement("div");
+  const lidRight = document.createElement("div");
 
-  // Pop-in + mjuk float (utan slide)
-  if (!reduceMotion) {
-    title.animate(
-      [
-        { transform: "scale(0.78)", opacity: 0 },
-        { transform: "scale(1.08)", opacity: 1, offset: 0.65 },
-        { transform: "scale(1.00)", opacity: 1 }
-      ],
-      { duration: 650, easing: "cubic-bezier(.2,1,.2,1)", fill: "forwards" }
-    );
+  const lidBase = {
+    position: "absolute",
+    top: "0",
+    width: "52%",
+    height: "46%",
+    borderRadius: "28px 28px 18px 18px",
+    boxShadow: "0 26px 70px rgba(0,0,0,0.35)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    background:
+      "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.28), rgba(255,255,255,0) 40%)," +
+      "linear-gradient(135deg, #ff4d7d 0%, #ffcc3d 55%, #4dd2ff 100%)"
+  };
 
-    // kontinuerlig “ballong-float”
-    title.animate(
-      [
-        { transform: "translateY(0px) rotate(-1deg)" },
-        { transform: "translateY(-10px) rotate(1deg)" },
-        { transform: "translateY(0px) rotate(-1deg)" }
-      ],
-      { duration: 2200, iterations: Infinity, easing: "ease-in-out" }
-    );
-  } else {
-    title.style.opacity = "1";
-  }
+  Object.assign(lidLeft.style, lidBase, { left: "0", transformOrigin: "100% 100%" });
+  Object.assign(lidRight.style, lidBase, { right: "0", transformOrigin: "0% 100%" });
 
-  // === CONFETTI CANVAS ===
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  Object.assign(canvas.style, {
-    position: "fixed",
-    inset: "0",
+  // själva lådan
+  const box = document.createElement("div");
+  Object.assign(box.style, {
+    position: "absolute",
+    bottom: "0",
     width: "100%",
-    height: "100%",
-    pointerEvents: "none",
-    zIndex: "999999"
+    height: "62%",
+    borderRadius: "26px",
+    boxShadow: "0 30px 90px rgba(0,0,0,0.40)",
+    border: "1px solid rgba(255,255,255,0.12)",
+    background:
+      "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.28), rgba(255,255,255,0) 45%)," +
+      "linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04))"
   });
-  document.body.appendChild(canvas);
 
-  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-  function resize() {
-    canvas.width = Math.floor(window.innerWidth * dpr);
-    canvas.height = Math.floor(window.innerHeight * dpr);
+  // “band” vertikalt + horisontellt
+  const ribbonV = document.createElement("div");
+  Object.assign(ribbonV.style, {
+    position: "absolute",
+    inset: "0",
+    margin: "auto",
+    width: "14%",
+    height: "100%",
+    borderRadius: "22px",
+    background: "linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18))",
+    mixBlendMode: "screen",
+    opacity: "0.9"
+  });
+
+  const ribbonH = document.createElement("div");
+  Object.assign(ribbonH.style, {
+    position: "absolute",
+    top: "38%",
+    left: "0",
+    right: "0",
+    height: "12%",
+    borderRadius: "22px",
+    background: "linear-gradient(90deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18))",
+    mixBlendMode: "screen",
+    opacity: "0.85"
+  });
+
+  // liten rosett
+  const bow = document.createElement("div");
+  Object.assign(bow.style, {
+    position: "absolute",
+    top: "7%",
+    left: "50%",
+    transform: "translateX(-50%)",
+    width: "42%",
+    height: "18%",
+    filter: "drop-shadow(0 18px 30px rgba(0,0,0,0.35))",
+    animation: reduceMotion ? "none" : "bowWiggle 1.3s ease-in-out infinite"
+  });
+
+  const bowLeft = document.createElement("div");
+  const bowRight = document.createElement("div");
+  const bowKnot = document.createElement("div");
+
+  const bowLoopBase = {
+    position: "absolute",
+    top: "20%",
+    width: "45%",
+    height: "70%",
+    borderRadius: "999px",
+    background: "linear-gradient(135deg, #b84dff 0%, #4dd2ff 55%, #4dff88 100%)",
+    border: "1px solid rgba(255,255,255,0.16)"
+  };
+  Object.assign(bowLeft.style, bowLoopBase, { left: "0", transform: "rotate(-18deg)" });
+  Object.assign(bowRight.style, bowLoopBase, { right: "0", transform: "rotate(18deg)" });
+
+  Object.assign(bowKnot.style, {
+    position: "absolute",
+    left: "50%",
+    top: "40%",
+    transform: "translate(-50%, -50%)",
+    width: "18%",
+    height: "40%",
+    borderRadius: "999px",
+    background: "linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.18))",
+    mixBlendMode: "screen"
+  });
+
+  bow.appendChild(bowLeft);
+  bow.appendChild(bowRight);
+  bow.appendChild(bowKnot);
+
+  // Text + knapp
+  const ui = document.createElement("div");
+  Object.assign(ui.style, {
+    position: "absolute",
+    inset: "0",
+    display: "grid",
+    placeItems: "center",
+    gap: "14px",
+    paddingTop: "8%",
+    textAlign: "center"
+  });
+
+  const hint = document.createElement("div");
+  hint.textContent = "Ett paket till dig 🎁";
+  Object.assign(hint.style, {
+    color: "rgba(255,255,255,0.92)",
+    font: "600 16px/1.2 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+    textShadow: "0 10px 30px rgba(0,0,0,0.35)",
+    opacity: "0.95"
+  });
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.textContent = buttonText;
+  Object.assign(btn.style, {
+    appearance: "none",
+    border: "0",
+    borderRadius: "999px",
+    padding: "14px 22px",
+    font: "800 18px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+    letterSpacing: "0.01em",
+    color: "rgba(10,10,20,0.9)",
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.70))",
+    boxShadow: "0 18px 60px rgba(0,0,0,0.40)",
+    cursor: "pointer",
+    transform: "translateZ(0)"
+  });
+
+  if (!reduceMotion) {
+    btn.animate([{ transform: "scale(1)" }, { transform: "scale(1.04)" }, { transform: "scale(1)" }], {
+      duration: 1400,
+      iterations: Infinity,
+      easing: "ease-in-out"
+    });
   }
-  resize();
-  window.addEventListener("resize", resize, { passive: true });
 
-  const colors = ["#ff4d7d", "#ffcc3d", "#4dff88", "#4dd2ff", "#b84dff", "#ffffff"];
-  const particles = [];
-  function rand(min, max) { return Math.random() * (max - min) + min; }
+  ui.appendChild(hint);
+  ui.appendChild(btn);
 
-  function spawnBurst(n = 40) {
-    const w = canvas.width, h = canvas.height;
-    const originX = rand(w * 0.18, w * 0.82);
-    const originY = rand(h * 0.06, h * 0.28);
+  // Bygg DOM
+  box.appendChild(ribbonV);
+  box.appendChild(ribbonH);
 
-    for (let i = 0; i < n; i++) {
-      const angle = rand(-Math.PI, Math.PI);
-      const speed = rand(3, 10) * dpr * (reduceMotion ? 0.65 : 1);
-      const size = rand(6, 14) * dpr;
+  boxWrap.appendChild(lidLeft);
+  boxWrap.appendChild(lidRight);
+  boxWrap.appendChild(box);
+  boxWrap.appendChild(bow);
+  boxWrap.appendChild(ui);
 
-      particles.push({
-        x: originX,
-        y: originY,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - rand(2, 6) * dpr,
-        w: size,
-        h: size * rand(0.5, 0.9),
-        rot: rand(0, Math.PI * 2),
-        vr: rand(-0.22, 0.22) * (reduceMotion ? 0.6 : 1),
-        color: colors[(Math.random() * colors.length) | 0],
-        life: rand(55, 155),
-        ttl: 0
-      });
+  gift.appendChild(boxWrap);
+  document.body.appendChild(gift);
+
+  // Focus på knappen (bra för mobil och tillgänglighet)
+  btn.focus({ preventScroll: true });
+
+  // Enter/Space öppnar också
+  const onKey = (e) => {
+    if (e.key === "Enter" || e.key === " " || e.code === "Space") {
+      e.preventDefault();
+      openGift();
     }
+  };
+  gift.addEventListener("keydown", onKey);
+
+  let opened = false;
+  btn.addEventListener("click", openGift, { passive: true });
+
+  function openGift() {
+    if (opened) return;
+    opened = true;
+
+    // Lås knappen
+    btn.disabled = true;
+    btn.style.opacity = "0.85";
+    btn.style.cursor = "default";
+
+    // Animera bort locket
+    if (!reduceMotion) {
+      lidLeft.style.animation = "shredLeft 520ms cubic-bezier(.2,1,.2,1) forwards";
+      lidRight.style.animation = "shredRight 520ms cubic-bezier(.2,1,.2,1) forwards";
+      boxWrap.animate([{ transform: "scale(1)" }, { transform: "scale(0.98)" }], {
+        duration: 220,
+        easing: "ease-out"
+      });
+      gift.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: 520,
+        easing: "ease-out",
+        fill: "forwards"
+      });
+    } else {
+      gift.style.opacity = "0";
+    }
+
+    // Starta celebration direkt
+    startCelebration();
+
+    // Ta bort paket-overlay efter animation
+    setTimeout(() => {
+      gift.removeEventListener("keydown", onKey);
+      gift.remove();
+      style.remove(); // kan tas bort här (confetti/title har egna styles inline)
+    }, reduceMotion ? 0 : 560);
   }
 
-  spawnBurst(110);
+  // ====== CELEBRATION: TEXT + CONFETTI ======
+  function startCelebration() {
+    // --- Text overlay ---
+    const overlay = document.createElement("div");
+    Object.assign(overlay.style, {
+      position: "fixed",
+      inset: "0",
+      display: "grid",
+      placeItems: "center",
+      pointerEvents: "none",
+      zIndex: "1000000",
+      padding: "6vmin",
+      userSelect: "none",
+      WebkitUserSelect: "none"
+    });
 
-  // === LOOP ===
-  let running = true;
-  const start = performance.now();
-  const endAt = start + seconds * 1000;
+    const title = document.createElement("div");
+    title.textContent = text;
+    Object.assign(title.style, {
+      fontWeight: "900",
+      lineHeight: "0.92",
+      letterSpacing: "0.01em",
+      textAlign: "center",
+      fontSize: "clamp(56px, 14vw, 170px)",
+      background:
+        "radial-gradient(circle at 30% 25%, rgba(255,255,255,0.95), rgba(255,255,255,0) 28%)," +
+        "linear-gradient(135deg, #ff4d7d 0%, #ffcc3d 25%, #4dff88 50%, #4dd2ff 75%, #b84dff 100%)",
+      WebkitBackgroundClip: "text",
+      backgroundClip: "text",
+      color: "transparent",
+      textShadow:
+        "0 2px 0 rgba(255,255,255,0.18)," +
+        "0 10px 30px rgba(0,0,0,0.28)," +
+        "0 24px 60px rgba(0,0,0,0.18)",
+      filter: "drop-shadow(0 18px 35px rgba(0,0,0,0.25))",
+      transform: "translateZ(0)"
+    });
 
-  function step(now) {
-    if (now < endAt) {
-      if (!reduceMotion) {
-        for (let i = 0; i < spawnPerFrame; i++) {
-          if (particles.length < maxParticles) spawnBurst(6);
+    overlay.appendChild(title);
+    document.body.appendChild(overlay);
+
+    if (!reduceMotion) {
+      title.animate(
+        [
+          { transform: "scale(0.78)", opacity: 0 },
+          { transform: "scale(1.10)", opacity: 1, offset: 0.65 },
+          { transform: "scale(1.00)", opacity: 1 }
+        ],
+        { duration: 650, easing: "cubic-bezier(.2,1,.2,1)", fill: "forwards" }
+      );
+
+      title.animate(
+        [
+          { transform: "translateY(0px) rotate(-1deg)" },
+          { transform: "translateY(-10px) rotate(1deg)" },
+          { transform: "translateY(0px) rotate(-1deg)" }
+        ],
+        { duration: 2200, iterations: Infinity, easing: "ease-in-out" }
+      );
+    } else {
+      title.style.opacity = "1";
+    }
+
+    // --- Confetti canvas ---
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    Object.assign(canvas.style, {
+      position: "fixed",
+      inset: "0",
+      width: "100%",
+      height: "100%",
+      pointerEvents: "none",
+      zIndex: "999999"
+    });
+    document.body.appendChild(canvas);
+
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    function resize() {
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+    }
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+
+    const colors = ["#ff4d7d", "#ffcc3d", "#4dff88", "#4dd2ff", "#b84dff", "#ffffff"];
+    const particles = [];
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+
+    function spawnBurst(n = 40) {
+      const w = canvas.width, h = canvas.height;
+      const originX = rand(w * 0.18, w * 0.82);
+      const originY = rand(h * 0.06, h * 0.28);
+
+      for (let i = 0; i < n; i++) {
+        const angle = rand(-Math.PI, Math.PI);
+        const speed = rand(3, 10) * dpr * (reduceMotion ? 0.65 : 1);
+        const size = rand(6, 14) * dpr;
+        particles.push({
+          x: originX, y: originY,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - rand(2, 6) * dpr,
+          w: size, h: size * rand(0.5, 0.9),
+          rot: rand(0, Math.PI * 2),
+          vr: rand(-0.22, 0.22) * (reduceMotion ? 0.6 : 1),
+          color: colors[(Math.random() * colors.length) | 0],
+          life: rand(55, 155),
+          ttl: 0
+        });
+      }
+    }
+
+    spawnBurst(120);
+
+    let running = true;
+    const start = performance.now();
+    const endAt = start + seconds * 1000;
+
+    function step(now) {
+      if (now < endAt) {
+        if (!reduceMotion) {
+          for (let i = 0; i < spawnPerFrame; i++) {
+            if (particles.length < maxParticles) spawnBurst(6);
+          }
+        } else {
+          if (Math.random() < 0.07 && particles.length < maxParticles) spawnBurst(10);
         }
       } else {
-        if (Math.random() < 0.07 && particles.length < maxParticles) spawnBurst(10);
+        running = particles.length > 0;
       }
-    } else {
-      running = particles.length > 0;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.ttl++;
+
+        p.vy += gravity * dpr * (reduceMotion ? 0.7 : 1);
+        p.vx *= drag;
+        p.vy *= drag;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        const alpha = Math.max(0, 1 - p.ttl / p.life);
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+
+        if (p.ttl > p.life || p.y > canvas.height + 80 * dpr) particles.splice(i, 1);
+      }
+
+      if (running) requestAnimationFrame(step);
+      else cleanup();
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function cleanup() {
+      overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration: 320,
+        easing: "ease-out",
+        fill: "forwards"
+      }).onfinish = () => overlay.remove();
 
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-      p.ttl++;
-
-      p.vy += gravity * dpr * (reduceMotion ? 0.7 : 1);
-      p.vx *= drag;
-      p.vy *= drag;
-      p.x += p.vx;
-      p.y += p.vy;
-      p.rot += p.vr;
-
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      const alpha = Math.max(0, 1 - p.ttl / p.life);
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = p.color;
-      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-      ctx.restore();
-
-      if (p.ttl > p.life || p.y > canvas.height + 80 * dpr) {
-        particles.splice(i, 1);
-      }
+      window.removeEventListener("resize", resize);
+      canvas.remove();
     }
 
-    if (running) requestAnimationFrame(step);
-    else cleanup();
+    requestAnimationFrame(step);
   }
-
-  function cleanup() {
-    overlay.animate([{ opacity: 1 }, { opacity: 0 }], {
-      duration: 320,
-      easing: "ease-out",
-      fill: "forwards"
-    }).onfinish = () => overlay.remove();
-
-    window.removeEventListener("resize", resize);
-    canvas.remove();
-  }
-
-  requestAnimationFrame(step);
 })();
 </script>
 </html>
